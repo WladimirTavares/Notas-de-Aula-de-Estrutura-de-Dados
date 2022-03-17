@@ -1,0 +1,649 @@
+\chapter{Algoritmos de Ordenação}
+
+\epigraph{
+Former Google CEO Eric Schmidt asked then-presidential candidate Barack Obama during an interview about the best way to sort one million integers; Obama paused for a moment and replied "I think the bubble sort would be the wrong way to go."
+}
+
+\epigraph{
+the bubble sort seems to have nothing to recommend it, except a catchy name and the fact that it leads to some interesting theoretical problems
+}{Knuth}
+
+
+O processo de ordenação é um dos processos mais importantes na área da computação. A ordenação de um conjunto de dados é o primeiro passo na solução de diversos problemas práticos. Na maior parte das listas de algoritmos mais importantes, podemos encontrar algum algoritmo de ordenação. Por exemplo, na lista do site interestingengineering \footnote{\url{https://interestingengineering.com/15-of-the-most-important-algorithms-that-helped-define-mathematics-computing-and-physics}} dos algoritmos que ajudaram a definir a matemática, computação e a física, o algoritmo QuickSort criado por Tony Hoare em 1962 figura entre outros algoritmos bem conhecidos como algoritmo de Euclides, crivo de Eratóstenes, Transformada Rápida de Fourier, Google Page Rank, Algoritmo de compressão JPG, entre outros. Na lista dos cinco algoritmos mais importante do cientista da computação Daniel Lemire, podemos encontrar os seguintes algoritmos: busca binária, transformada rápida de fourier, hashing, mergesort e a decomposição em valores singulares (algoritmo de fatoração matricial). O algoritmo mergesort é um outro algoritmo de ordenação  que foi inventado por Jonh Von Neumann em 1945. 
+
+Os algoritmos de ordenação quicksort e mergesort rodam no caso médio em $\mathcal{O}(n log~n)$. Contudo, no pior caso, o quicksort roda em $\mathcal{O}(n^2)$, enquanto o algoritmo de mergesort em $\mathcal{O}(n log~n)$. Analisando apenas o pior caso da complexidade de tempo dos dois algoritmos, podemos dizer que o algoritmo mergesort deveria ser mais importante que o quicksort.(Calma, veloz). Vários aspectos devem ser levado em conta na comparação dos algoritmos de ordenação:
+
+\begin{itemize}
+    \item Complexidade de tempo no melhor, pior e caso médio. 
+    \item Estabilidade, ou seja, se o algoritmo de ordenação mantém a ordem relativa dos elementos com chae iguais.
+    \item Baseado em comparação, ou seja, se o algoritmo examina os elementos comparando dois elementos.
+    \item Adaptável, ou seja, se entradas pré-ordenadas afetam o tempo de execução do algoritmo.
+    \item Online, ou seja, se o algoritmo de ordenação consegue processar a entrada recebendo-a em partes.
+    \item In-place, ou seja, se o algoritmo consegue ordenar a entrada sem a utilização de uma grande quantidade de memória extra. 
+    \item Complexidade de utilização de memória adicional. Alguns algoritmos necessitam apenas de $\mathcal{O}(1)$ de memória adicional, outros precisam de uma quantidade $\mathcal{O}(log~n)$.
+\end{itemize}
+
+
+
+\section{SelectionSort}
+
+O algoritmo de ordenação por seleção segue o projeto de algoritmo incremental. Inicialmente, construímos um vetor ordenado de tamanho 1, seguido de um vetor de tamanho 2, assim por diante. No caso do algoritmo de ordenação por seleção, o vetor ordenado de tamanho 1 é formado pelo elemento de menor valor do vetor. Observe que esse fato já impossibilita do algoritmo selectionsort ser online (Por quê?)
+
+\begin{minted}{C++}
+void selection_sort(vector <int> & A, int p, int r){
+    debug(A, p, r);
+    if( p < r){
+        int min_idx = p;
+        for(int k = p+1; k <= r; k++){
+            if(A[k] < A[min_idx]) min_idx = k;
+        }
+        swap(A[p], A[min_idx]);
+        selection_sort(A, p+1, r);
+    }
+}
+
+/*
+[A, p, r] = [{5,3,7,1,4}, 0, 4]
+[A, p, r] = [{1,3,7,5,4}, 1, 4]
+[A, p, r] = [{1,3,7,5,4}, 2, 4]
+[A, p, r] = [{1,3,4,5,7}, 3, 4]
+[A, p, r] = [{1,3,4,5,7}, 4, 4]
+*/
+
+\end{minted}
+
+No pior caso e no melhor caso, o número de comparações realizadas na linha 6 é $n-1 + n-2 + \ldots + 0 = \frac{n(n-1)}{2} \in \mathcal{O}(n^2)$. Observe que uma entrada pré-ordenada não causa nenhum impacto no tempo de execução do algoritmo então dizemos que o algoritmo selectionsort não é adaptável. No algoritmo de ordenação por seleção, realizamos a trocar do elemento na posição $i$ pelo elemento na posição $min\_idx$. Essa troca pode tornar o algoritmo de ordenação por seleção não estável. Considere a seguinte entrada para o algoritmo de ordenação por seleção $[4_A,5,3,2,4_B,1]$. Nesta entrada, temos dois números iguais. Esses dois números serão diferenciados pelo subscrito. Na primeira iteração do algoritmo, obtemos o seguinte vetor $[1,5,3,2,4_B,4_A]$. Note que algoritmo, a posição relativa dos dois números iguais foi alterada. 
+
+\section{Bubblesort}
+
+O algoritmo bubblesort é um algoritmo de ordenação baseado em comparações em que realizamos apenas comparação de elementos adjacentes. Em cada iteração do algoritmo, os elementos adjacentes do vetor são comparados e os elementos que não estão na ordem são trocados. Depois de uma passada pelo vetor, o maior elemento do vetor está na última posição do vetor e o problema pode ser reduzido.
+
+
+\begin{minted}{C++}
+void bubble_sort(vector <int> & A, int p, int r){
+    debug(A, p, r);
+    if(r > p){
+        int num_trocas = 0;
+        for(int k = p; k <= r-1; k++){
+            if(A[k] > A[k+1]){
+                swap(A[k], A[k+1]);
+                num_trocas++;
+            }
+        }
+        debug(A,p,r,num_trocas);
+        if( num_trocas > 0){
+            bubble_sort(A, p, r-1);
+        } 
+    }
+}
+
+/*
+[A, p, r] = [{5,3,7,1,4}, 0, 4]
+[A,p,r,num_trocas] = [{3,5,1,4,7}, 0, 4, 3]
+[A, p, r] = [{3,5,1,4,7}, 0, 3]
+[A,p,r,num_trocas] = [{3,1,4,5,7}, 0, 3, 2]
+[A, p, r] = [{3,1,4,5,7}, 0, 2]
+[A,p,r,num_trocas] = [{1,3,4,5,7}, 0, 2, 1]
+[A, p, r] = [{1,3,4,5,7}, 0, 1]
+[A,p,r,num_trocas] = [{1,3,4,5,7}, 0, 1, 0]
+*/
+
+\end{minted}
+
+No pior caso do algoritmo, toda comparação realizada gera uma troca:
+
+\begin{itemize}
+    \item número de comparações: $\dfrac{n(n-1)}{2} \in \mathcal{O}(n^2)$
+    \item número de trocas: $\dfrac{n(n-1)}{2} \in \mathcal{O}(n^2)$
+\end{itemize}
+
+Para encontrar o número de comparações realizada pelo algoritmo, consulte o quadro abaixo:
+
+\fcolorbox{black}{lightblue}{
+  \begin{minipage}{\textwidth}
+  Seja $T(n)$ o número de comparações realizada pelo algoritmo apresentado acima. O número de comparações pode ser encontrado pela seguinte definição recursiva:
+  
+  $$
+  T(n) = 
+  \begin{cases}
+  0 & n = 1\\
+  T(n-1) + n-1 & \text{, caso contrário}\\
+  \end{cases}
+  $$
+  
+  Utilizando o método da iteração, obtemos:
+ 
+  $$
+  \begin{tabular}{ccc}
+  T(n) & = & T(n-1) + n-1\\
+  T(n) & = & T(n-2) + n-2 + n-1\\
+  \vdots & \vdots & \vdots \\
+  T(n) & = & T(n-j) + n-j + n - (j-1) + \ldots + n-1\\
+  \end{tabular}
+  $$
+  
+  Tomando $j=n$, temos
+  
+  $$
+  \begin{tabular}{ccc}
+  T(n) & = & T(0) + n-n  + n - (n-1) + \ldots + n-1\\
+  T(n) & = & 0 + 0  + n - (n-1) + \ldots + n-1\\
+  T(n) & = & n(n-1)/2\\
+  \end{tabular}
+  $$
+  \end{minipage}
+}
+
+O algoritmo de ordenação bubble sort é um algoritmo de ordenação estável. Observe que ele realiza apenas trocas entre elementos adjacentes. 
+
+
+
+\textbf{Exercícios} 
+\begin{enumerate}
+\item Construa a versão não recursiva  do algoritmo Bubblesort.
+
+\item Implemente uma versão recursiva do algoritmo Bubble sort bidirecional \footnote{\url{https://en.wikipedia.org/wiki/Cocktail_shaker_sort}}.
+
+
+
+
+
+
+\end{enumerate}
+
+\section{InsertionSort}
+
+O algorimo InsertionSort foi mencionado por Jonh Mauchly em 1946. O InsertionSort segue o projeto de um algoritmo incremental em que construímos um vetor ordenado de tamanho 2, seguido de um vetor de tamanho 3, até construímos um vetor ordenado de tamanho $n$. Em cada iteração, adicionamos um elemento a um vetor ordenado de tamanho $k$  obtendo um vetor de ordenado de tamanho $k+1$ enquanto $k < n$.
+
+
+
+
+
+\begin{minted}{C++}
+void insertion_sort(vector <int> & A, int p, int r){ // A[0..p-1] está ordenado
+    if( p <= r){
+        int x = A[p];
+        int i = p-1;
+        debug(p,r,A);
+        while( i >= 0 && A[i] > x){
+            A[i+1] = A[i];
+            debug(x,i,A);  
+            i--;
+        }
+        assert( i < 0 || A[i] <= x );
+        A[i+1] = x;
+        insertion_sort(A, p+1, r);
+    }
+}
+
+
+
+/*
+[p,r,A] = [0, 4, {5,3,7,1,4}]
+[p,r,A] = [1, 4, {5,3,7,1,4}]
+[x,i,A] = [3, 0, {5,5,7,1,4}]
+[p,r,A] = [2, 4, {3,5,7,1,4}]
+[p,r,A] = [3, 4, {3,5,7,1,4}]
+[x,i,A] = [1, 2, {3,5,7,7,4}]
+[x,i,A] = [1, 1, {3,5,5,7,4}]
+[x,i,A] = [1, 0, {3,3,5,7,4}]
+[p,r,A] = [4, 4, {1,3,5,7,4}]
+[x,i,A] = [4, 3, {1,3,5,7,7}]
+[x,i,A] = [4, 2, {1,3,5,5,7}]
+
+*/
+\end{minted}
+
+\subsection{Exercício}
+
+\begin{enumerate}
+\item Descreva com as suas palavras o algoritmo abaixo:
+\begin{minted}{C++}
+void shuttlesort( vector <int> & arr, int i, int n){
+    if(i == n) return;
+    else {
+        for(int j = i; j >= 1; j--){
+            if(arr[j] < arr[j-1]){
+                swap(arr[j], arr[j-1]);
+            }
+        }
+        shuttlesort(arr, i+1, n);
+    }
+}
+\end{minted}
+\end{enumerate}
+
+
+\section{Mergesort}
+
+O algoritmo de ordenação por intercalação também conhecido por mergesort utiliza o paradigma de construção de algoritmo de divisão e conquista. Na etapa de divisão, um problema grande é quebrado em vários subproblemas menores. Na etapa de conquista, os subproblemas são resolvidos recursivamente. Quando o problema é pequeno o bastante, ele é resolvido diretamente, caso contrário, o problema pode ser dividido novamente. No caso do algoritmo de ordenação, o vetor a ser ordenado é dividido em duas metades. Cada metade é ordenada usando o algoritmo mergesort. Em seguida, essas duas partes ordenadas são intercaladas em um único grupo ordenado.
+
+O algoritmo de merge (intercalação) é apresentado da seguinte maneira:
+
+\begin{minted}{C++}
+void merge(vector <int> & A, int p, int q, int r){
+    vector <int> W;
+    W.resize(r-p+1);
+    int i = p;
+    int j = q+1;
+    int k = 0;
+    while( i <= q && j <= r){
+        if(A[i] <= A[j]){
+            W[k++] = A[i++];
+        }else{
+            W[k++] = A[j++];
+        }
+    }
+    while( i <= q ) W[k++] = A[i++];
+    while( j <= r ) W[k++] = A[j++];
+    for(int i = p; i <= r; i++){
+        A[i] = W[i-p];
+    } 
+}
+
+\end{minted}
+
+O algoritmo de mergesort pode ser apresentado da seguinte maneira:
+
+\begin{minted}{C++}
+void mergesort(vector <int> & A, int p, int r){
+    if( p < r){
+        int q = (p+r)/2;
+        mergesort(A, p, q);
+        mergesort(A, q+1, r);
+        merge(A, p, q, r);
+    }
+}
+
+\end{minted}
+
+
+\begin{exemplo}
+Dado um vetor $arr$ de tamanho $n$. Uma inversão no vetor $arr$ é um par $(i,j)$ tal que $i < j$ e $arr[i] > arr[j]$. Faça um programa que dado um vetor, calcule o número de inversões. 
+
+Por exemplo, $arr = [4,2,3,1,5,0]$ possui 10 inversões: 
+\begin{itemize}
+\item (0,1)
+\item (0,2)
+\item (0,3)
+\item (0,5)
+\item (1,3)
+\item (1,5)
+\item (2,3)
+\item (2,5)
+\item (3,5) 
+\item (4,5).
+\end{itemize}
+
+Um algoritmo simples para calcular o número de inversões é o seguinte:
+\end{exemplo}
+
+
+\begin{minted}{C++}
+int number_inversion(vector <int> & v){
+    int n = v.size();
+    int inv = 0;
+    for(int i = 0; i < n; i++){
+        for(int j = i+1; j < n; j++){
+            if(v[i] > v[j]){
+                inv++;
+            }
+        }
+    }
+    return inv;
+}
+\end{minted}
+
+O número de inversões em um vetor de tamanho $n$ é da ordem de $\mathcal{O}(n^2)$ e a complexidade de tempo do código acima é $\mathcal{O}(n^2)$. Poderíamos ficar satisfeitos com essa solução acima, contudo podemos contar todas as inversões no vetor com uma complexidade $\mathcal{O}(n log n)$ adaptando o algoritmo do mergesort.
+
+Primeiramente, vamos dividir o vetor $arr$ em duas metades: o vetor u1 formado pelos elementos do vetor $arr[0 \ldots \lfloor n/2 \rfloor ]$ e o vetor u2 formado pelos elementos do vetor  $arr[ \lfloor n/2 \rfloor + 1 \ldots n-1]$. As inversões no vetor podem ser de três tipos:
+
+\begin{itemize}
+\item Tipo 1 : Entre os elementos do vetor u1.
+\item Tipo 2: Entre os elementos do vetor u2:
+\item Tipo 3: Entre um elemento de u1 e um elemento de u2.
+\end{itemize}
+
+No exemplo do vetor  $arr = [4,2,3,1,5,0]$, temos as seguintes inversões:
+
+\begin{itemize}
+\item Tipo 1 : (0,1) e (0,2)
+\item Tipo 2: (3,5) e (4,5)
+\item Tipo 3: (0,3),(0,5),(1,3),(1,5),(2,3) e (2,5)
+\end{itemize}
+
+Concentraremos nas inversões do tipo 3, para cada elemento $x$ do vetor $u1$ precisamo saber quantos elementos do vetor $u2$ são maiores que x. Note que esse problema pode ser resolvido de maneira mais fácil se os dois vetores estiverem ordenados. Observe também que podemos alterar a ordem dos elementos de $u1$ e $u2$, uma vez que vamos assumir que as inversões do Tipo 1 e Tipo 2 já foram contadas. 
+
+
+O processo de divisão do problema:
+
+\begin{minted}{C++}
+int count_inversion(vector <int> & v, int start, int end){
+
+    if(end > start){
+        int mid = (start + end)/2;
+        int cnt = count_inversion(v, start, mid);
+        cnt +=  count_inversion(v, mid+1, end);
+        cnt += merge_count(v, start, mid, end);
+        return cnt;
+    }else{
+        return 0;
+    }
+}
+\end{minted}
+
+
+A adaptação do algoritmo de merge para calcular o número de inversões do tipo 3:
+
+\begin{minted}{C++}
+
+int merge_count( vector <int> & A, int start, int mid, int end){
+
+    vector <int> W;
+    W.resize( end - start + 1);
+
+   
+
+    int i = start;
+    int j = mid+1;
+    int k = 0;
+    int cnt = 0;
+
+     
+
+    while( i <= mid && j <= end ){
+        if( A[i] <= A[j] ){
+            W[k] = A[i], k++, i++, cnt += j - (mid+1);
+        }else{
+            W[k] = A[j], k++, j++ ;
+        }
+
+        debug(W, i , j, k, cnt );
+    }
+
+    while( i <= mid ) W[k] = A[i], k++, i++, cnt += j - (mid+1);
+    while( j <= end ) W[k] = A[j], k++, j++;
+
+    for(int i = start; i <= end; i++){
+        A[i] = W[i-start];
+    }
+
+    return cnt;
+
+}
+
+
+\end{minted}
+
+
+
+
+
+
+\section{Quicksort}
+
+O algoritmo de ordenação quicksort utiliza o paradigma de divisão e conquista para a construção do algoritmo. Em cada subproblema, o vetor é dividindo em duas partes considerando um elemento especial do vetor chamado de pivô. A primeira parte do vetor são os elementos menores ou iguais que o pivô e a segunda parte são os elementos maiores que o pivô. Em seguida, cada parte é ordenada recursivamente utilizando o algoritmo quicksort. Quando o tamanho do vetor é menor ou igual a 1, então o vetor já está ordenado.
+
+\begin{minted}{C++}
+
+int separa(vector <int> & arr, int p, int r){
+    int pivot = arr[r];
+    int j = p;
+
+    for(int k = p; k < r; k++){
+        if(arr[k] <= pivot){
+            swap(arr[k], arr[j]);
+            j++;
+        }
+    }
+    swap(arr[j], arr[r]);
+    debug(arr, p, r, j);
+    return j;
+}
+
+void quicksort(vector <int> & arr, int p, int r){
+    debug(arr, p, r);
+    if(p < r){ // vetor de tamanho pelo menos 2       
+        int j = separa(arr, p, r);
+        quicksort(arr, p, j-1); 
+        quicksort(arr, j+1, r); 
+    }   
+}
+
+\end{minted}
+
+\begin{exemplo}
+
+Dado um vetor de inteiro $arr$ de tamanho $n$ e um inteiro  $0 \leq k < n$. Devolva o elemento que estará na posicao $k$ quando o vetor arr estiver ordenado. Resolva esse problema adaptando o algoritmo do quicksort.
+
+\begin{itemize}
+\item Complexidade de tempo pior caso $\mathcal{O}(n^2)$
+\item Complexidade de tempo no caso médio: $\mathcal{O}(n)$    
+\end{itemize}
+
+\end{exemplo}
+
+\begin{minted}{C++}
+int quickselect(vector <int> & arr, int p, int r, int k){
+    if( p == r ){
+        return arr[p];
+    }else{
+        int j = separa(arr, p, r);
+        debug(arr, p, r, j, k);
+        if( k == j ){
+            return arr[j];
+        }else if( k < j){
+            return quickselect(arr, p, j-1, k);
+        }else {
+            return quickselect(arr, j+1, r, k-j-1);
+        }
+    }
+}
+
+\end{minted}
+
+
+
+\section{CountingSort}
+
+O algoritmo de ordenação CountingSort é um algoritmo de ordenação que não é baseado em comparações. O countingsort deve ser aplicado quando os valores a serem ordenados estão dentro de um pequeno intervalo. A ideia do algoritmo é primeiramente realizar a contagem dos elementos que possuem chaves distintas. Em seguida, realizamos a soma de prefixo no vetor de contagem para determinar a posição de cada chave na sequência ordenada.
+
+\begin{exemplo}
+
+Para simplificar, vamos considerar que os valores que vão ser ordenados estão entre 0 e 9:
+
+\begin{tabular}{cccccccc}
+arr     &  1 & 4 & 1 & 2 & 5 & 2 & 8\\
+\end{tabular}
+
+O processo de ordenação segue os seguintes passos:
+
+\begin{enumerate}
+
+\item Vamos construir o vetor de contagem para contar os elementos que aparecem para cada chave:
+
+\begin{tabular}{ccccccccccc}
+índice     &  0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+contagem   &  0 & 2 & 2 & 0 & 1 & 1 & 0 & 0 & 1 & 0\\
+\end{tabular}
+
+\item Em seguida, realizamos a soma dos prefixos do vetor de contagem:
+
+\begin{tabular}{ccccccccccc}
+índice     &  0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+contagem   &  0 & 2 & 4 & 4 & 5 & 6 & 6 & 6 & 7 & 7\\
+\end{tabular}
+
+
+\item Para encontrar a posição de cada elemento do vetor original arr no vetor ordenado precisamos percorrer o vetor arr na ordem inversa. Para cada elemento x, ele será colocado em --contagem[x]. Por exemplo, o valor 8 será colocado na posição 7-1.
+
+
+\begin{tabular}{cccccccc}
+índice   & 0  & 1 & 2 & 3 & 4 & 5 & 6\\
+arr      &  1 & 4 & 1 & 2 & 5 & 2 & 8\\
+ordenado &  - & - & - & - & - & - & 8\\ 
+\end{tabular}
+
+O vetor de contagem modificado será:
+
+\begin{tabular}{ccccccccccc}
+índice     &  0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+contagem   &  0 & 2 & 4 & 4 & 5 & 6 & 6 & 6 & 6 & 7\\
+\end{tabular}
+
+O valor 2 será colocado na posição contagem[2]-1 = 4-1:
+
+\begin{tabular}{cccccccc}
+índice   & 0  & 1 & 2 & 3 & 4 & 5 & 6\\
+arr      &  1 & 4 & 1 & 2 & 5 & 2 & 8\\
+ordenado &  - & - & - & 2 & - & - & 8\\ 
+\end{tabular}
+
+
+O vetor de contagem modificado será:
+
+\begin{tabular}{ccccccccccc}
+índice     &  0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+contagem   &  0 & 2 & 3 & 4 & 5 & 6 & 6 & 6 & 6 & 7\\
+\end{tabular}
+
+Observe que o próximo número 2 será posicionado em contagem[2]-1 = 3
+
+
+
+\end{enumerate}
+
+
+\end{exemplo}
+
+
+\begin{minted}{C++}
+/*
+Time complexity:
+Worst case: O(n+k)
+Average case: O(n+k)
+Best case: O(n+k)
+where k = max-min+1
+Space complexity
+Worst case: O(n+k)
+*/
+void coutingsort(vector <int> & A){
+    int n = A.size();
+    int min = *min_element(A.begin(), A.end() );
+    int max = *max_element(A.begin(), A.end() );
+
+    vector <int> contagem( max-min + 1, 0);
+
+    for(int k = 0; k < n; k++){
+        contagem[A[k] - min]++;
+    }
+
+    partial_sum( contagem.begin(), contagem.end(), contagem.begin() );
+
+    vector <int> ordenado ( A.size() );
+
+    for(int k = n-1; k >=0; k--){
+        ordenado[ --contagem[A[k]-min] ] = A[k];
+    }
+
+    copy(ordenado.begin(), ordenado.end(), A.begin() );
+
+}
+
+int main(){
+
+    vector <int> A ( {999,991,992,991,993,994,994,995,997,998} );
+
+    coutingsort(A);
+
+    for(auto x : A)
+        cout << x << endl;
+
+
+    return 0;
+}
+\end{minted}
+
+
+\section{RadixSort}
+
+A idéia do algoritmo radixsort é ordenar os números dígito por dígito, começando do dígito menos significativo até o dígito mais significativo utilizando algum algoritmo de ordenação estável. Como cada dígito pode variar entre 0 e 9, então podemos utilizar o algoritmo de countingsort modificado para considerar como chave de ordenação o i-ésimo dígito.
+
+\begin{exemplo}
+Considere o seguinte vetor de números não-ordenado:
+
+$$[170,45,75,90,802,42,2,66]$$
+
+
+\begin{enumerate}
+
+\item Ordenando os elementos pelo dígito da unidade temos:
+
+$$[17\underline{0}, 9\underline{0}, 80\underline{2}, 4\underline{2}, \underline{2}, 4\underline{5},7 \underline{5},6\underline{6}]$$
+
+\item Ordenando os elementos pelo dígito das dezena, temos:
+
+$$[8\underline{0}2, \underline{0}2, \underline{4}2, \underline{4}5, \underline{6}6,1\underline{7}0,\underline{7}5 ,\underline{9}0]$$
+
+\item Ordenando os elementos pelo dígito das centenas, temos:
+
+$$[\underline{0}02, \underline{0}42, \underline{0}45, \underline{0}66, \underline{0}75, \underline{0}90, \underline{1}70, \underline{8}02 ]$$
+
+\end{enumerate}
+
+\end{exemplo}
+
+
+
+\begin{minted}{C++}
+void countingsort(int arr[], int n, int exp)
+{
+	int output[n]; // output array
+	int i, count[10] = { 0 };
+
+	// Store count of occurrences in count[]
+	for (i = 0; i < n; i++)
+		count[(arr[i] / exp) % 10]++;
+
+	partial_sum( count, count + 10, count  );
+
+
+	// Build the output array
+	for (i = n - 1; i >= 0; i--) {
+		output[--count[(arr[i] / exp) % 10]] = arr[i];
+		
+	}
+
+    copy(output, output + n, arr );
+
+	
+}
+
+// The main function to that sorts arr[] of size n using
+// Radix Sort
+void radixsort(int arr[], int n)
+{
+	int m = *max_element(arr, arr+n);
+
+	for (int exp = 1; m / exp > 0; exp *= 10)
+		countingsort(arr, n, exp);
+}
+
+// A utility function to print an array
+void print(int arr[], int n)
+{
+	for (int i = 0; i < n; i++)
+		cout << arr[i] << " ";
+}
+
+// Driver Code
+int main()
+{
+	int arr[] = { 170, 45, 75, 90, 802, 24, 2, 66 };
+	int n = sizeof(arr) / sizeof(arr[0]);
+	radixsort(arr, n);
+	print(arr, n);
+	return 0;
+}
+
+\end{minted}

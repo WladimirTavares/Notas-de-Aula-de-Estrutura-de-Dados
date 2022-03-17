@@ -1,0 +1,492 @@
+%%
+\chapter{Análise de algoritmos}
+\label{chapter:typesetting}
+
+
+\epigraph{
+“Um bom algoritmo, mesmo rodando em uma máquina lenta, sempre
+acaba derrotando (para instâncias grandes do problema) um algoritmo
+pior rodando em uma máquina rápida. Sempre.”
+
+\textit{— S. S. Skiena, The Algorithm Design Manual}
+}
+
+\epigraph{
+
+Um cientista americano perguntou para um cientista russo: Quando vocês desenvolveram a bomba atômica, como você conseguiram executar uma grande quantidade de cálculo com seus computadores fracos?. O cientista russo respondeu: "Nós desenvolvemos algoritmos melhores"
+Anedota russa
+}
+
+Muitos fatores podem influenciar o tempo de execução de algoritmo. Inicialmente, precisamos de um modelo que seja genérico e independente da máquina/linguagem usada. 
+
+No modelo Máquina de acesso aleatório (Random Access Machine  - RAM), consideramos as seguintes hipóteses:
+
+\begin{itemize}
+    \item As instruções são executadas uma após a outra, sem operações concorrentes.
+    \item Cada operação simples (+,-,*,/,if) demora um 1 passo.
+    \item Cada acesso à memória custa também um passo.
+    \item As operações realizadas com dados inteiros e ponto flutuantes tem o mesmo custo.
+\end{itemize}
+
+Algumas implicações da adoção desse modelo:
+
+\begin{itemize}
+    \item A hierarquia de memória dos computadores é desprezada.
+    \item A utilização de paralelismo também é desprezada.
+\end{itemize}
+
+
+\section{Analisando número de operações de um programa}
+
+Considere o seguinte programa que dado um vetor de inteiros de tamanho $n$ conta o número de elementos iguais a zero.
+
+\begin{lstlisting}[language=C, caption={primeiro programa}]
+int count = 0;
+for ( int i=0; i<n; i++)
+    if (v[i] == 0) count++;
+\end{lstlisting}
+
+Contando o número de operações simples:
+
+\begin{tabular}{|l|l|}
+\hline
+Operações & Número de operações\\
+\hline
+Declaração de variáveis & 2\\
+\hline
+Atribuições &  2\\
+\hline
+Comparação "menor que" & n+1\\
+\hline
+Comparação "igual a" & n\\
+\hline
+Acesso a um elemento do vetor & n\\
+\hline
+Incremento & entre n e 2n\\
+\hline
+\end{tabular}
+
+Observe que o número de operações depende da instância de entrada do problema. O número de passos com relação ao tamanho da entrada será descrita pela função $T(n)$:
+
+
+No pior caso, o número de operações será:
+
+$$
+T(n) = 2 + 2 + (n+1) + n+ n + 2n = 5n + 5
+$$
+
+No melhor caso, o número de operações será:
+
+$$
+T(n) = 2 + 2 + (n+1) + n+ n + n = 4n + 5
+$$
+
+Observe que o processo de análise de algoritmo, pode ser uma tarefa árdua se consideramos todas as operações simples envolvidas. Em geral, escolhemos a operação mais executada e contamos apenas quantas vezes ela está sendo executada. No exemplo acima, poderíamos ter analisado apenas o número de vezes que a operação de incremento está sendo executado.
+
+Agora, iremos analisar o algoritmo de ordenação por inserção:
+
+\begin{minted}{C++}
+    int x, i; //2 declaracao
+    // 1 declaracao, 1 atribuicao, n comparacoes, n incrementos 
+    for(int j = 1; j < n; j++){ 
+        x = A[j]; // n-1 atribuicao
+        i = j-1; // n-1 atribuicao
+        //n-1 vezes o while
+        while(i >= 0 && A[i] > x){ // entre 1 e j comparações  
+            A[i+1] = A[i]; //entre 0 e j-1 vezes atribuições
+            i = i - 1;     // entre 0 e j-1 vezes decrementos
+        }
+        A[i+1] = x; // n-1 vezes atribuições
+    }
+\end{minted}
+
+Diferente da análise anterior, vamos desprezar as seguintes operações básicas: 
+
+\begin{itemize}
+    \item declarações de variáveis
+    \item Atribuições
+    \item Acesso a um elemento de vetor
+    \item incremento
+\end{itemize}
+
+Vamos contar apenas, o número de vezes que a operação $A[i] > x$ é realizada. 
+
+No melhor caso, a operação $A[i] > x$ é realizada. 
+
+$$
+T(n) = \sum_{j=1}^{n-1} 1 = n-1 
+$$
+
+No pior caso, a operação $A[i] > x$ é realizada. 
+
+$$
+T(n) = \sum_{j=1}^{n-1} j = \frac{(1 + n-1)(n-1)}{2} = \frac{n(n-1)}{2} = \frac{n^2-n}{2} 
+$$
+
+Na próxima seção, apresentaremos uma ferramenta que possibilita a comparação entre algoritmos ou até mesmo a comparação entre o melhor caso e o pior caso de um mesmo algoritmo. Essa ferramenta é interessante porque podemos descobrir o comportamento do algoritmo para entradas grandes. No caso do algoritmo acima, para $n=2$, os dois algoritmos realizam o mesmo número de operações mas a situação muda dramaticamente a medida que o $n$ cresce.
+
+
+
+
+
+
+
+\section{Análise Assintótica}
+
+Considere dois algoritmos: $A_1$ que executa $n^2 + 1$ passos e $A_2$ que executa $n + 1000$ passos. A tendência da maioria das pessoas é considerar valores pequenos. Contudo, a análise de algoritmos faz exatamente o contrário: ignora os valores pequenos e concentra-se em valores grandes de $n$. Para isso, utilizaremos o comportamento assintótico. No caso acima, considere que $f(n) = n^2 +1$ e $g(n) = n + 1000$. Vamos mostrar que $f(n)$ domina assintoticamente $g(n)$ encontrando uma constante positivas  $c$ e $m$ tal que 
+
+$$
+g(n) \leq c f(n) \quad \forall n \geq m
+$$
+
+
+Considerando $f(n) = n^2 + 1$ e $g(n) = n + 1000$. Vamos fazer algumas manipulações algébricas para encontrar $c$ e $m$.
+
+\begin{tabular}{ccc}
+$n + 1000$     & $\leq$ &$n + 999 + 1$ \\
+             & $\leq$ & $n^2 + 999n + 1$\\
+             & $\leq$ & $n^2 + n^2 + 1 (n \geq 999)$\\
+             & $\leq$ & $2n^2 + 1$ \\
+             & $\leq$ & $2n^2 + 2$ \\
+             & $\leq$ & $2(n^2 + 1)$ \\
+             & $\leq$ & $2f(n))$ \\
+\end{tabular}
+
+Pelas manipulações acima, encontramos que $c = 2$ e $m = 999$
+
+$$n + 1000 \leq 2( n^2 + 1 ) \quad \forall n \geq 999$$
+
+Podemos encontrar outras constantes realizando manipulações algébricas diferentes.
+
+
+\begin{tabular}{cccc}
+$n + 1000$     & $\leq$ & $n^2$ & $(n \geq 33)$  \\
+               & $\leq$ & $n^2 + 1$  \\
+               & $\leq$ & $f(n))$   \\
+\end{tabular}
+
+Dado uma função $g(n)$, podemos encontrar um conjunto de funções que são dominadas assintoticamente por $g(n)$:
+
+$$
+\mathcal{O}(g(n)) = \{f(n) ~|~ \exists c, m, 0 \leq f(n) \leq c \cdot g(n) ~~ \forall n \geq m\}
+$$
+
+Em geral, escolhemos algumas funções para descrever o comportamento dos algoritmos:
+
+\begin{itemize}
+    \item $\mathcal{O}(1)$ (algoritmo constante)
+    \item $\mathcal{O}(log ~n)$(algoritmo logarítmico)
+    \item $\mathcal{O}(n)$ (algoritmo linear)
+    \item $\mathcal{O}(n ~log ~n)$ (algoritmo linearítmico)
+    \item $\mathcal{O}(n^2)$ (algoritmo quadrático)
+    \item $\mathcal{O}(n^3)$ (algoritmo cúbico)
+    \item $\mathcal{O}(2^n)$ (algoritmo exponencial)
+    \item $\mathcal{O}(n!)$ (algoritmo fatorial)
+    
+    
+    
+\end{itemize}
+
+\subsection{Comparações entre as classes de funções}
+
+\small 
+
+\begin{table}[!ht]
+\begin{tabular}{ccccccc}
+Tamanho & \multicolumn{6}{c}{Função de custo}                             \\
+\hline
+n       & $log_2n$ & $n$    & $nlog_2n$ & $n^2$   & $n^3$   & $2^n$       \\
+\hline
+10      & 3        & 10     & 30        & 100     & 1000    & 1000        \\
+100     & 6        & $10^2$ & 664       & $10^4$  & $10^6$  & $10^30$     \\
+$10^3$  & 9        & $10^3$ & 9965      & $10^6$  & $10^9$  & $10^300$    \\
+$10^4$  & 13       & $10^4$ & $10^5$    & $10^8$  & $10^12$ & $10^3000$   \\
+$10^5$  & 16       & $10^5$ & $10^6$    & $10^10$ & $10^15$ & $10^30000$  \\
+$10^6$  & 19       & $10^6$ & $10^7$    & $10^12$ & $10^18$ & $10^300000$
+\end{tabular}
+\end{table}
+
+
+\begin{itemize}
+\item 1 semana $\approx$ $1,21\cdot 10^6$ segundos\\
+\item 1 ano $\approx$ $3\cdot 10^7$ segundos\\
+\item 1 século $\approx$ $3\cdot 10^9$ segundos\\
+\item 1 milênio $\approx$ $3\cdot 10^{10}$ segundos\\
+\end{itemize}
+
+
+\begin{itemize}
+  \item $O(n)$: linear
+  \begin{itemize}
+    \item quando $n$ dobra, o tempo dobra
+    \item Ex: Busca linear
+    \item Ex: Encontrar o máximo/mínimo de um vetor
+    \item Ex: Produto interno de dois vetores
+  \end{itemize}\medskip
+  \item $O(n \lg n)$:
+  \begin{itemize}
+    \item quando $n$ dobra, o tempo um pouco mais que dobra
+    \item Ex: algoritmos de ordenação que veremos
+  \end{itemize}\medskip
+  \item $O(n^2)$: quadrático
+  \begin{itemize}
+    \item quando $n$ dobra, o tempo quadriplica
+    \item Ex: BubbleSort, SelectionSort e InsertionSort
+  \end{itemize}\medskip
+  \item $O(n^3)$: cúbico
+  \begin{itemize}
+    \item quando $n$ dobra, o tempo octuplica
+    \item Ex: multiplicação de matrizes $n \times n$
+  \end{itemize}
+  
+  \item $f(n) = O(c^n)$: complexidade exponencial
+  \begin{itemize}
+  \itemsep1em
+  \item Típico de algoritmos que fazem busca exaustiva (força bruta) para resolver um problema.
+  \item Não são úteis do ponto de vista prático.
+  \begin{itemize}
+   \item Quando $n$ é 20, $O(2^n)$ é um milhão.
+  \end{itemize}
+  \end{itemize}
+  
+  
+  \item $f(n) = O(n!)$: complexidade exponencial
+  \begin{itemize}
+  \itemsep1em
+  \item Pior que $O(c^n)$
+  \item Não são úteis do pronto de vista prático.
+  \item Quando $n$ é 20, $O(n!)$ é maior que 2 quintilhões.
+  \end{itemize}
+  
+\end{itemize}
+
+
+\subsection{Exercícios}
+
+\textbf{Exercício:} Mostre que $2n+ 120 \in \mathcal{O}(n)$
+
+\begin{proof}
+Precisamos encontrar duas constantes $c$ e $m$, tal que
+
+$$
+2n + 120 \leq cn ~~\forall n \geq m
+$$
+
+Podemos encontrar essas constantes realizando algumas manipulações algébricas:
+
+\begin{tabular}{llll}
+2n + 120 & $\leq$ &  $2n + n$ & $(n \geq 120)$\\
+         & $\leq$ &  $3n$ & \\ 
+\end{tabular}
+
+Encontramos os seguintes valores $c = 3$ e $m = 120$
+
+Outros valores para c e m podem ser encontrados realizando diferentes manipulações algébricas:
+
+
+\begin{tabular}{llll}
+$2n + 120$ & $\leq$ &  $2n + 2n$ & $(n \geq 60)$\\
+         & $\leq$ &  $4n$ & $(n \geq 60)$\\ 
+\end{tabular}
+
+Neste caso, encontramos $c=4$ e $m = 60$
+
+\end{proof}
+
+
+\textbf{Exercício:} Mostre que $3n^2+ n + 5 \in \mathcal{O}(n^2)$
+
+
+\begin{proof}
+Precisamos encontrar duas constantes $c$ e $m$, tal que
+
+$$
+3n^2 + n + 5 \leq cn^2 ~~\forall n \geq m
+$$
+
+Podemos encontrar essas constantes realizando algumas manipulações algébricas:
+
+\begin{tabular}{llll}
+$3n^2 + n + 5$ & $\leq$ &  $3n^2 + n^2 + n^2$ & $(n \geq 3)$\\
+               & $\leq$ &  $5n^2$ & $(n \geq 3)$\\ 
+\end{tabular}
+
+Encontramos os seguintes valores $c = 5$ e $m = 3$
+
+
+\end{proof}
+
+
+\textbf{Exercício:} Mostre que $n^2  \not \in \mathcal{O}(n)$
+
+
+\begin{proof}
+
+Suponha por absurdo que  $n^2 \in \mathcal{O}(n)$
+
+Então existem constantes $c$ e $m$ tal que
+$$
+n^2 \leq cn ~~\forall n \geq m
+$$
+
+Escolha $k = max(c, m) + 1$. Pela propriedade acima, $k^2 \leq kc$ $(k \geq m)$, segue o fato que $k \leq c$.
+
+Pela construção de $k$, sabemos que $k > c$, o que é uma contradição. 
+
+\end{proof}
+
+
+
+\textbf{Exercício:} Mostre que $n ~log~ n  \not \in \mathcal{O}(n)$
+
+
+\begin{proof}
+
+Suponha por absurdo que  $n ~log n~ \in \mathcal{O}(n)$
+
+Então existem constantes $c$ e $m$ tal que
+$$
+n~log~n \leq cn ~~\forall n \geq m
+$$
+
+Escolha $k = max(m, 2^c) + 1$. Pela propriedade acima, $k ~log k~ \leq ck$ $(k \geq m)$, segue o fato que $log k \leq c$.
+
+Pela construção de $k$, sabemos que $k > 2^c$, logo $log k > c$ o que é uma contradição. 
+
+\end{proof}
+
+
+\section{Regras práticas}
+
+\begin{itemize}
+    \item $\forall f, f(n) \in \mathcal{O}(f(n))$
+    \item Se $g(n) \in \mathcal{O}(f(n))$ então $c \cdot g(n) \in \mathcal{O}(f(n)) ~\forall c \in \mathbb{N}$
+    \item Se $g(n) = a_kn^k + a_{k-1}x^{k-1} + \ldots + a_1n+ a_0 \in \mathcal{O}(f(n))$ então $g(n) \in \mathcal{O}(n^k)$
+    \item Se $g(n) \in \mathcal{O}(f(n))$ e $h(n) =  g(n) + f(n)$ então $h(n) \in \mathcal{O}(f(n))$
+\end{itemize}
+
+
+\section{Analisando programas recursivos}
+
+Considere o seguinte programa:
+
+
+\begin{minted}{C++}
+int piso_log2(int n){
+    if(n <= 1) return 0;
+    else return 1 + piso_log2(n/2);
+}
+\end{minted}
+
+Vamos contar o número de vezes que a operação soma é realizada. Observe que o número de vezes que essa operação é realizada pode ser descrita utilizando a seguinte recorrência:
+
+$$
+T(n) = 
+\begin{cases}
+0 & n \leq 1\\
+T( \lfloor n/2 \rfloor ) + 1 & \text{caso contrário}\\
+\end{cases}
+$$
+
+Vamos tentar encontrar uma fórmula fechada utilizando o método da iteração. Primeiramente, vamos assumir que $n$ é uma potência de 2, $n = 2^k$. Faremos essa suposição para facilitar nosso cálculos.
+
+\begin{tabular}{lll}
+$T(2^k)$ & = & $T(2^{k-1}) + 1$ \\
+       & = & $T(2^{k-2}) + 1 + 1$\\
+       & = & $T(2^{k-3}) + 1 + 1 + 1$\\
+       & = & $\ldots$ \\
+       & = &  $T(2^{k-j}) + j$\\
+\end{tabular}
+
+Fazendo $j = k$, teremos
+
+$$T(2^k) = T(2^0) + k = T(1) + k = 0 + k = k$$
+
+Como $n = 2^k$, segue que $k = log_2 ~n$. Logo,
+
+$$T(n) = log_2 n$$
+
+Logo, podemos dizer que o algoritmo para encontrar o $\lfloor log_2(n) \rfloor$ realiza $O(log_2(n) )$ operações.
+
+\subsection{Apêndice}
+
+\begin{definition}
+A notação de somatório é utilizada para expressar a soma dos termos de uma sequência $a_m, a_{m+1}, \ldots, a_n$. Nós usamos
+
+$$
+\sum_{j = m}^{n} a_j
+$$
+
+para representar
+
+$$
+a_{m} + a_{m+1} + \ldots + a_{n}
+$$
+
+A variável $j$ é chamada índice do somatório, $m$ é limite inferior do somatório e $n$ é o limite superior do somatório.
+
+\end{definition}
+
+\begin{theorem}
+Para todo $n \in \mathbb{N}$,
+
+$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
+
+\end{theorem}
+
+\begin{proof}
+
+Seja $S$ o soma dos números entre 1 e n. Na segunda linha, escrevemos o somatório na ordem contrária. Podemos agrupar o lado direto das equações como $n$ parcelas valendo $n+1$.
+
+\begin{center}
+\begin{tabular}{ccc}
+     S & = & $1 + 2 + \ldots + n$   (1)\\
+     S & = & $n + n-1 + \ldots + 1$ (2)\\ 
+\hline
+     S & = & $n+1 + n+1 + \ldots + n+1$ \\ 
+    2S & = & $n(n+1)$\\
+    S & = &  $\dfrac{n(n+1)}{2}$\\
+\end{tabular}
+    
+\end{center}
+
+A demonstração acima pode ser feita usando a notação de somatório:
+
+$$
+\begin{tabular}{ccc}
+S  & = & $\displaystyle \sum_{i=1}^{n} i$\\
+S  & = & $\displaystyle \sum_{i=1}^{n} n-i+1$\\
+\hline
+2S  & = & $\displaystyle \sum_{i=1}^{n} i+n-i+1$\\
+2S  & = & $\displaystyle \sum_{i=1}^{n} n+1$\\
+2S  & = & $\displaystyle n(n+1)$\\
+S  & = & $\displaystyle \dfrac{n(n+1)}{2}$\\
+\end{tabular}
+$$
+ 
+\end{proof}
+\begin{definition}
+Na lógica matemática, uma prova por contradição estabelece a verdade de uma proposição matemática assumindo que a proposição seja falsa obtendo uma contradição.
+\end{definition}
+
+\begin{theorem}
+Seja $a,b \in \mathbb{N}$, $\forall n \geq 8$,  se $3a + 5b = n$ então $a \geq 2 \vee b \geq 1$.
+
+Suponha por contradição que existe $n \geq 8$ tal que $3a + 5b = n \wedge \neg (a \geq 2 \vee b \geq 1)$. Suponha que $a < 1$ e $b < 0$ então  
+
+$$
+\begin{tabular}{ccc}
+    a & $\leq$ & 1 \\
+    b & $\leq$ & 0 \\
+    3a & $\leq$ & 3 \\
+    5b & $\leq$ & 0 \\
+    3a + 5b & $\leq$ & 3 \\
+\end{tabular}
+$$
+
+Por outro lado, sabemos $3a+5b \geq 8$, o que leva a uma contradição.
+\end{theorem}
+
+
+
+

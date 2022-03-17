@@ -1,0 +1,69 @@
+%% Introduction / first chapter.
+
+\chapter{Problemas, instâncias, algoritmo, tempo}
+
+Um \textbf{problema computacional} pode ser caracterizado por um conjunto de dados bem-definido que chamaremos de \textbf{entrada}. Na maioria dos casos, temos também um conjunto de \textbf{restrições} sobre os dados de entrada. Essas restrições são importantes para a construção da solução do problema. Espera-se que a partir do conjunto de dados de entrada seja possível encontrar um conjunto de dados que chamaremos de \textbf{saída}. Em alguns casos, podemos ter restrições sobre o conjunto de dados de saída do problema.
+
+A seguir, apresentaremos o nosso primeiro problema: 
+
+\textbf{Problema 1:} Dados dois números inteiros a e b, devolva o valor a + b.
+
+Uma possível entrada para o problema pode ser $a = 5$ e $b = 8$ ou $a = 123134565465432332$ e $b = 456121315465879853213$. Cada uma das possíveis entrada para o problema chamaremos de \textbf{instância}. Um \textbf{problema computacional} será uma coleção dessas instância. 
+
+Note que podemos utilizar algoritmos distintos para instâncias diferentes do mesmo problema usando características dos dados de entrada do problema.
+
+Note que o Problema 1 possui um grande número de instâncias. Considere a seguinte restrição do problema acima:
+
+\textbf{Problema 2:} Dados dois números inteiros $0 \leq a \leq 2^{31}$ e $ 0 \leq b \leq 2^{31}$, devolva o valor $a + b$. Garantimos que $a+b \leq 2^{32}-1$ 
+
+Esse problema acima pode ser resolvido com a seguinte função:
+
+\begin{lstlisting}[language=C, caption={Solução para o problema 2}]
+unsigned int soma(unsigned int a, unsigned int b){
+	return a+b;
+}
+\end{lstlisting}
+
+Observe que as restrições do Problema 2 ($0 \leq a \leq 2^{31}$ e $ 0 \leq b \leq 2^{31}$) permitiram que a escolha de um tipo de dado apropriado para representar os valores de $a$ e $b$ (Por que os valores $a$ e $b$ não podem ser int?) e a restrição $a+b \leq 2^{32}-1$ permite que continue utilizando uma variável \textbf{unsigned int} para descrever a saída. Observe que $a + b$ pode ser igual a $2^{32}$ quando $a = 2^{31}$ e $b=2^{31}$.(Por que precisamos garantir isso para que o retorno da função seja uma variável do tipo \textbf{unsigned int}).   
+
+Considere a seguinte restrição do problema acima:
+
+\textbf{Problema 3:} Dados dois números inteiros $a$ e $b$ com até 100 dígitos decimais, devolva o valor $a + b$. 
+
+Observe agora que o problema 3 é bem mais complicado. Se a linguagem não tiver o suporte para inteiros com precisão arbitrária, precisaremos representar cada número inteiro utilizando uma estrutura para armazenar os dígitos de cada número. Depois implementar o algoritmo da soma utilizando uma variável vai\_um. 
+
+\begin{lstlisting}[language=C, caption={Solução para o problema 3}]
+typedef struct {
+	//digitos serao armazenados com o digito das unidades
+	int * digitos;
+	int qtd;
+} big_int;
+
+big_int soma(big_int a, big_int b){
+	...
+}
+\end{lstlisting}
+
+O \textbf{tamanho} da instância é a quantidade de dados para descrever a instância, geralmente denotada por $n$. No problema 2, podemos dizer que o tamanho da instância é n = 2 (pois podemos representar por dois \textbf{unsigned int}). No problema 3, podemos dizer que o tamanho da instância é o número de caracteres usados para representar os dois inteiros. Para $a = 123134565465432332$ e $b = 456121315465879853213$, o tamanho da instância seria $n = 39$. Dependendo do caso, podemos usar mais de um número inteiro para especificar o tamanho da entrada. O tamanho da instância acima poderia ser $n = 18$ e $m = 21$. 
+
+Considere o seguinte problema:
+
+\textbf{Problema 4:} Dado um número $ 0 \leq n \leq 2^{32}-1$, devolva o números de bits com o valor 1 na sua representação binária.   
+
+No Problema 4, o tamanho máximo da instância será 32 ou podemos dizer que o tamanho é a quantidade de bits utilizada para representar o número $n$, ou seja, $\lceil \log_2{n} \rceil$.
+
+A \textbf{solução de um problema computacional} pode ser obtida por um \textbf{algoritmo}. Um algoritmo resolve um problema quando ele recebe um instância qualquer do problema e devolve uma solução para aquela instância ou informa que não existe uma solução válida. Considere o seguinte problema:
+
+\textbf{Problema 5:} Dado um vetor $A$ de inteiros distintos de tamanho $n$ e um valor inteiro $x$, devolva o índice em que valor $x$ aparece no vetor $A$, se $x$ aparece no vetor $A$, -1, caso contrário. \textbf{Restrição: }  $-2^{31} \leq A[i] < 2^{31}-1$ para todo $ 0 < i < n-1$   
+
+Neste caso, a solução do problema precisa resolver as instâncias em que o valor $x$ aparece no vetor $A$ e quando ele não aparece.
+
+
+
+
+
+
+
+
+
+

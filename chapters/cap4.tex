@@ -1,0 +1,598 @@
+% The end to end process: second chapter.
+
+\chapter{Tipos de Dados Abstratos}
+
+Um Tipo de Dados Abstrato (TAD) pode ser entendido como um molde de um tipo de dados definido por um comportamento esperado (um conjunto de operações permitidas). O adjetivo abstrato é utilizado porque a definição do tipo não necessita de uma implementação concreta. Note que a utilização de TAD permite o programador não se preocupe com detalhes de como aquele tipo de dados é implementado. Por exemplo, o programador pode usar uma variável \texttt{int} sem ter a necessidade de saber quantos bits são usados para representá-lo e/ou como as operações são implementadas (apesar que essas informações podem ser úteis). Na linguagem C++, um grande número de estruturas de dados abstratas são providas através da STL (Standard Template Library). Algumas das estruturas de dados implementadas na STL serão estudadas ao longo da cadeira de estrutura de dados.
+
+\section{Encapsulamento e Abstração de dados}
+
+Uma das ideias centrais no desenvolvimento de um TAD é conseguir esconder  a forma concreta que ele foi implementado (encapsulamento) e fornecer apenas o essencial e ocultar os detalhes (abstração) do usuário do seu TAD. Uma analogia que podemos fazer aqui é a construção de um muro separando o desenvolvedor e o usuário do TAD. Inicialmente, a construção desse muro separando o desenvolvedor e o usuário pode parecer uma ideia ruim. Contudo, esse muro permite a construção de sistema cada vez mais complexos e também permite que o desenvolvedor mude a implementação concreta sem prejudicar o usuário do TAD.
+
+Considere o seguinte problema:
+
+\begin{markdown}
+
+>> No problema Josephus, $N$ pessoas se colocam numa fila circular e assumem valores de 1 até $N$. Um número $E$ é escolhido para iniciar o jogo. E pega a espada, mata o elemento à sua frente e passa a espada uma posição à frente. O jogo continua até que um único elemento permaneça vivo.
+\end{markdown}
+
+Primeiramente, vamos projetar o nosso programa Cliente. No nosso programa Cliente, podemos imaginar uma utilização do nosso tipo de dados abstrato. Neste caso, vamos precisar dos seguintes métodos:
+
+\begin{itemize}
+    \item Josephus(int n, int e) : método construtor para receber o número de pessoas da nossa fila circular e a pessoa inicial com a espada.
+    \item int survivor() : método que desenvolve a pessoa sobrevivente.
+\end{itemize}
+
+\begin{minted}{C++}
+#include "Josephus.hpp"
+int main(){
+    int n, e;
+    cin >> n;
+    cin >> e;
+    Josephus J(n,e);
+    cout << J.survivor() << endl;
+}
+\end{minted}
+
+Em seguida, podemos definir o nosso arquivo cabeçalho do nosso TAD. No nosso arquivo cabeçalho, vamos definir a nossa implementação concreta:
+
+\begin{itemize}
+    \item int * elem: vetor usado para guardar os identificadores das pessoas na fila.
+    \item bool * vivo: vetor usado para checar se uma pessoa na fila está viva.
+    \item int next(int pos): método para descobrir a próxima pessoa viva depois da pessoa na posição pos.
+\end{itemize}
+
+
+
+\begin{minted}{C++}
+#ifndef JOSEPHUS_HPP
+#define JOSEPHUS_HPP
+class Josephus {
+    private:
+        int n, e;
+        // vetor usado para guardar os identificadores das pessoas    
+        int * elem;
+        // vetor usado para checar se uma pessoa esta viva
+        bool * vivo;
+        // metodo para descobrir a próxima pessoa viva
+        int next(int pos);
+    public:
+        
+        Josephus(int n, int e);
+        int survivor();
+};
+
+#endif
+\end{minted}
+
+Em seguida, provemos as implementações do TAD no arquivo Josephus.cpp:
+
+\begin{minted}{C++}
+#include "Josephus.hpp"
+#include <iostream>
+using namespace std;
+Josephus::Josephus(int n, int e) : n(n), e(e) {
+    elem = new int[n];
+    vivo = new bool[n];
+    for(int i = 0; i < n; i++){
+        elem[i] = i+1;
+        vivo[i] = true;
+    }
+}
+
+int Josephus::next(int pos){
+    pos = (pos + 1)%n;
+    while( !vivo[pos] ){
+        pos = (pos + 1)%n;
+    }
+    return pos;
+}
+int Josephus::survivor(){
+    int pos = e-1;
+    int num_vivos = n;
+    while( num_vivos > 1){
+        pos = next(pos);
+        vivo[pos] = false;
+        pos = next(pos);            
+        num_vivos--;
+    }
+    return elem[pos];
+}
+\end{minted}
+
+Nesse problema, podemos destacar duas operações básicas:
+
+\begin{itemize}
+    \item matar uma pessoa: complexidade de tempo $\mathcal{O}(1)$
+    \item procurar o próximo vivo: complexidade de tempo $\mathcal{O}(l)$ onde $l$ é o número de pessoas mortas.
+\end{itemize}
+
+Vamos tentar usar uma outra implementação concreta em que o custo de procurar o próximo vivo seja reduzida. Agora, quando um elemento do vetor for removido, nós vamos mover para frente todos os elementos depois do elemento removido. Dessa maneira, o tamanho do vetor será reduzido em uma unidade até que o tamanho do vetor fique igual a 1.
+
+O novo arquivo cabeçalho com essa ideia:
+
+\begin{minted}{C++}
+#ifndef JOSEPHUS_HPP
+#define JOSEPHUS_HPP
+#include <vector>
+using namespace std;
+
+class Josephus {
+    private:
+        int n, e;
+        // vetor usado para guardar os identificadores das pessoas    
+        int * elem;
+
+    public:
+        
+        Josephus(int n, int e);
+        int survivor();
+};
+
+#endif
+\end{minted}
+
+A nossa nova implementação do nosso TAD seria:
+
+
+\begin{minted}{C++}
+#include "Josephus2.hpp"
+#include <iostream>
+
+using namespace std;
+
+Josephus::Josephus(int n, int e) : n(n), e(e) {
+    
+    elem = new int[n];
+    for(int i = 0; i < n; i++)
+        elem[i] = i+1;
+}
+
+int Josephus::survivor(){
+    int pos = e-1;
+    int actual_size = n;
+    
+    while( actual_size > 1){
+        pos = (pos + 1) % actual_size;
+        for(int k = pos; k < actual_size-1; k++){
+            elem[k] = elem[(k+1)%actual_size];
+        }            
+        if(pos == actual_size-1)
+            pos = 0;
+        actual_size--;
+
+    }
+
+    return elem[pos];
+
+}\end{minted}
+
+\section{Compilação separada}
+
+As classes C++ são normalmente divididas em dois arquivos: arquivos cabeçalhos com a extensão .hpp e contém as definições da classe e das funções. A implementação das funções vão para o arquivo com a extensão .cpp. Fazendo isso, se a sua implementação da sua classe não é alterada então ela não precisa ser recompilada. 
+
+No exemplo acima, temos três arquivos:
+\begin{itemize}
+    \item cliente.cpp: arquivo que utiliza o nosso TAD.
+    \item Josephus.hpp: definição do nosso TAD
+    \item Josephus.cpp: implementação do nosso TAD
+\end{itemize}
+
+
+A compilação do nosso projeto será executada nos seguintes passos:
+
+\begin{enumerate}
+
+\item Gerando um arquivo objeto Josephus.o.
+
+\begin{minted}{bash}
+g++  -c Josephus.cpp
+\end{minted}
+
+
+\item Gerando o arquivo cliente.o
+
+\begin{minted}{bash}
+g++  -c cliente.cpp
+\end{minted}
+
+
+\item Fazendo a linkagem e gerando o executável
+\begin{minted}{bash}
+g++ cliente.o Josephus.o -o cliente 
+\end{minted}
+
+\end{enumerate}
+
+Essas operações podem ser automatizadas usando um arquivo makefile:
+
+\begin{minted}{bash}
+cliente: Josephus.o cliente.o
+	g++ cliente.o Josephus.o -o cliente 
+Josephus2.o : Josephus.cpp
+	g++ -c Josephus.cpp
+cliente.o : cliente.cpp
+	g++ -c cliente.cpp
+\end{minted}
+
+Utilizando o arquivo makefile:
+
+\begin{minted}{bash}
+$ make
+g++ -c Josephus.cpp
+g++ -c cliente.cpp
+g++ cliente.o Josephus.o -o cliente 
+\end{minted}
+
+Considere o seguinte exemplo:
+
+cliente.cpp
+\begin{minted}{C++}
+#include <iostream>
+
+int soma(int a, int b);
+
+int main(){
+    int a  = 2;
+    int b  = 3;
+    std::cout << soma(a,b) << std::endl;
+
+}
+\end{minted}
+
+soma.cpp
+\begin{minted}{C++}
+#include <iostream>
+
+int soma(int a, int b);
+
+int main(){
+    int a  = 2;
+    int b  = 3;
+    std::cout << soma(a,b) << std::endl;
+
+}
+\end{minted}
+
+O processo completo de geração do executável:
+
+\begin{minted}{C++}
+$ g++ -S cliente.cpp -o cliente.s
+$ g++ -S soma.cpp -o soma.s
+$ as cliente.s -o cliente.o
+$ as soma.s -o soma.o
+$ g++ cliente.o soma.o -o cliente
+
+\end{minted}
+
+As duas primeiras linhas estamos gerando o arquivo na linguagem de montagem .s. Em seguida, usamos o montador assembler as para gerar o arquivo objeto.
+
+
+
+
+
+
+
+\section{Sobrecarga de operadores}
+
+A linguagem C++ permite sobrecarregar a maior parte dos operadores da linguagem. No exemplo abaixo, construiremos um TAD \texttt{Fraction}. O tipo de dados \texttt{Fraction} representa o conjunto dos números racionais com a seguinte definição matemática:
+
+\begin{equation}
+    \mathbb{Q} = \{ a/b | a,b \in \mathbb{Z}, b \neq 0\}
+\end{equation}
+
+Implementaremos as seguintes operações no nosso tipo TAD Fração:
+
+\begin{itemize}
+    \item $\frac{a}{b} + \frac{c}{d} = \frac{ad + cb}{bd}$
+    \item $\frac{a}{b} - \frac{c}{d} = \frac{ad - cb}{bd}$
+    \item $\frac{a}{b} \times \frac{c}{d} = \frac{ac}{bd}$
+    \item $\frac{a}{b} \div \frac{c}{d} = \frac{ad}{bc}$
+    
+    
+\end{itemize}
+
+Primeiramente, vamos definir o código de utilização do nosso TAD:
+
+\begin{minted}{C++}
+#include <iostream>
+#include "Fraction.cpp"
+using namespace std;
+
+
+int main(){
+
+	Fraction f1(2, 3);
+	Fraction f2(4, 5);
+	
+	cout << f1 << endl;
+	cout << f1 + f2 << endl;
+	cout << f1 - f2 << endl;
+	cout << f1 * f2 << endl;
+	cout << f1 / f2 << endl;
+	
+	
+}
+/*
+2/3
+22/15
+-2/15
+8/15
+10/12
+*/
+\end{minted}
+
+
+Na definição do nosso arquivo cabeçalho, informaremos que vamos sobrecarregar os seguintes operadores:
+
+\begin{itemize}
+    \item soma
+    \item subtração
+    \item multiplicação
+    \item divisão
+\end{itemize}
+
+
+\begin{minted}{C++}
+#ifndef FRACTION_HPP
+#define FRACTION_HPP
+
+class Fraction {
+	private:
+		int num, den;
+	public:
+		Fraction(int top, int bottom) : num(top), den(bottom) {}
+		Fraction(int top) : Fraction(top,1) {}
+		int numerador() const { return num; }
+		int denominador() const {return den; }
+
+        Fraction operator+(const Fraction & f);
+		friend Fraction operator-(const Fraction & left, const Fraction & right);
+		friend Fraction operator*(const Fraction & left, const Fraction & right);
+		friend Fraction operator/(const Fraction & left, const Fraction & right);
+		
+};
+
+\end{minted}
+
+Arquivo da implementação do nosso cabeçalho:
+
+\begin{minted}{C++}
+#include <iostream>
+using namespace std;
+class Fraction {
+	private:
+		int num, den;
+	public:
+		Fraction(int top, int bottom) : num(top), den(bottom) {}
+		Fraction(int top) : Fraction(top,1) {}
+		int numerador() const { return num; }
+		int denominador() const {return den; }
+
+        Fraction operator+(const Fraction & f);
+		friend Fraction operator-(const Fraction & left, const Fraction & right);
+		friend Fraction operator*(const Fraction & left, const Fraction & right);
+		friend Fraction operator/(const Fraction & left, const Fraction & right);
+};
+
+
+Fraction Fraction::operator+(const  Fraction & f){
+    int num = this->num * f.denominador() + f.numerador() * this->den;
+	int den = this->den * f.denominador();
+	return Fraction(num,den);
+}
+
+
+Fraction operator-(const Fraction & left, const Fraction & right){
+	int num = left.num * right.den - right.num * left.den;
+	int den = left.den * right.den;
+	return Fraction(num,den);
+}
+
+Fraction operator*(const Fraction & left, const Fraction & right){
+	int num = left.num * right.num;
+	int den = left.den * right.den;
+	return Fraction(num,den);
+}
+
+Fraction operator/(const Fraction & left, const Fraction & right){
+	int num = left.num * right.den;
+	int den = left.den * right.num;
+	return Fraction(num,den);
+}
+
+ostream& operator<<(ostream &output, const Fraction& right)
+{
+    output << right.numerador() << "/" << right.denominador();
+    return output;
+}
+
+\end{minted}
+
+Note que a implementação concreta do Tipo Abstrato de Dados não importa. No exemplo acima, optamos por implementar as operações do nosso TAD utilizando sobrecarga dos operadores. Note que as funções de sobrecarga dos operadores \texttt{+,-,*,/} foram declaradas com uma função \texttt{friend} da classe \texttt{Fraction}. Uma função friend tem acesso aos membros privados e protegidos de uma classe. O operador $<<$ não foi declarado como \texttt{friend} por isso precisamos utilizar os métodos numerator e denominator. 
+
+
+\section{TAD Conjunto}
+
+O nosso tipo abstrato de dados conjunto prover as seguintes operações:
+
+\begin{itemize}
+    \item Conjunto(max\_size): um construtor do tipo recebendo o tamanho máximo do conjunto.
+    \item add(x): Uma função para adicionar o elemento x no conjunto.
+    \item remove(x): Uma função para remover o elemento x do conjunto.
+    \item sobrecarga do operador \& para realizar a intersecção de conjuntos.
+\end{itemize}
+
+
+Primeiramente, vamos definir um arquivo cliente para o nosso TAD:
+
+\begin{minted}{C++}
+#include <stdio.h>
+#include <cstdlib>
+#include <iostream>
+
+#include "Set.hpp"
+
+using namespace std;
+
+int main(){
+
+	Set s1(10);
+	s1.add(3); s1.add(5); s1.add(7);
+	Set s2(10);
+	s2.add(7); s2.add(8); s2.add(3);
+	cout << s1 << endl;
+	cout << s2 << endl;
+	cout << (s1 & s2)  << endl;
+		
+}
+/*
+{3, 5, 7}
+{7, 8, 3}
+{3, 7}
+*/
+\end{minted}
+
+O arquivo cabeçalho do nosso TAD Conjunto:
+
+\begin{minted}{C++}
+#ifndef SET_HPP
+#define SET_HPP
+#include <iostream>
+using namespace std;
+class Set {
+	private:
+		int * element;
+		int actual_size;
+		int max_size;
+	public:
+    Set(int max_size);
+    ~Set();
+    int size() const ;
+    int capacity();		
+    bool has_element(int x) const;
+    void add(int x);
+    void remove(int x);
+    friend ostream& operator<<(ostream &output, const Set& s);
+    Set operator&(Set & right); // interseccao
+};
+#endif
+
+\end{minted}
+
+Implementação dos métodos do arquivo cabeçalho:
+
+\begin{minted}{C++}
+#include "Set.hpp"
+
+
+Set::Set(int capacity)   {
+    element = new int[capacity];
+    actual_size = 0;
+    max_size = capacity; 
+}
+
+Set::~Set(){
+    free(element);
+}
+
+int Set::size() const {
+    return actual_size;
+}
+
+int Set::capacity(){
+    return max_size;
+}
+
+/*
+Complexidade de tempo: O(n)
+*/
+
+bool Set::has_element(int x) const{
+    for(int i = 0; i < size() ; i++){
+        if( element[i] == x ) 
+            return true;
+    }
+    return false;
+}
+
+/*
+Complexidade de tempo: O(1)
+*/
+    
+void Set::add(int x){
+    if(!has_element(x)){
+        if( size() < capacity() )
+        element[actual_size++] = x;
+    }
+}
+
+/*
+Complexidade de tempo: O(n)
+*/
+
+
+void Set::remove(int x){
+    
+    int last = 0;
+    for(int i = 0; i  < size() ; i++){
+        if( element[i] != x){
+            element[last] = element[i];
+            last++;
+        }
+    }
+    
+    actual_size = last;
+}
+
+/*
+Complexidade de tempo: O(nm)
+*/
+
+Set Set::operator&(Set & right){
+	int new_size = max(capacity(), right.capacity() );
+	Set ans(new_size);
+	for(int i = 0; i < size(); i++){
+		if( right.has_element( element[i] ) ){
+			ans.add(element[i]);
+		}
+	}
+	
+	return ans;
+
+}
+
+
+ostream& operator<<(ostream &output, const Set& s)
+{
+  output << "{";
+  
+  if( s.size() > 0){
+		output  << s.element[0];
+  
+		for(int i = 1; i < s.size(); i++){
+		output << ", " << s.element[i];
+		}
+	}
+  
+  output << "}";
+  
+  return output;
+}
+\end{minted}
+
+Nessa implementação do TAD Conjunto, temos as seguintes complexidades de tempo das operações:
+
+\begin{center}
+\begin{tabular}{cc}
+
+Operação     & Complexidade de Tempo \\
+\hline
+add          & $\mathcal{O}(1)$\\
+has\_element  & $\mathcal{O}(n)$\\
+remove          & $\mathcal{O}(n)$\\
+s1 \& s2              & $\mathcal{O}(nm)$    
+\end{tabular}
+\end{center}
+
+Podemos alterar as complexidades de tempo dessas operações modificando a implementação dessas operações sem modificar o comportamento do TAD.
+

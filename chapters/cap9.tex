@@ -1,0 +1,315 @@
+\chapter{Fila}
+
+Na ciência da computação, uma fila é um estrutura de dados que mantém uma coleção de elementos de maneira que a operação de dequeue remove o elemento mais antigo da fila e operação enqueue adiciona um novo elemento na fila preservando a ordem de tempo na fila. Uma maneira fácil de implementar é manter descritores para o ínicio e o fim da fila. Esses descritores serão importantes para manter a corretude das operações enqueue e dequeue.
+
+Na linguagem C++, a fila pode ser implementada estendendo a classe list (que por sua vez são implementadas como listas duplamente encadeadas) implementando as operações push\_back, pop\_front, front.
+
+\begin{minted}{C++}
+template <typename T> 
+class queue : private list <T>
+{
+  public:
+    using base_type = list <T> ; 
+  void  enqueue ( const T& x ) { base_type::push_back( x ); }
+  const T& front  ()             { return base_type::front(); }
+  void  dequeue  ()             {  base_type::pop_front(); }
+  bool  empty()             { return base_type::empty(); }
+};
+\end{minted}
+
+Uma desvantagem de implementar a fila herdando da STL list é que a STL list é implementada como uma lista duplamente encadeada. Podemos implementar a fila usando uma lista encadeada simples guardando um ponteiro para o primeiro e o último elemento da lista. Na seção \ref{sec::queue_single_linked_list}, apresentamos a implementação da fila usando uma lista encadeada simples.
+
+
+De igual modo, a fila também pode ser implementada estendendo a classe vector da linguagem C++. 
+
+\begin{minted}{C++}
+
+template <typename T> 
+class queue : private vector <T>
+{
+  public:
+    using base_type = vector <T> ; 
+  void  enqueue ( const T& x ) { base_type::push_back( x ); }
+  const T& front  ()             { return base_type::front(); }
+  void  dequeue  ()             {  base_type::erase( base_type::begin() ); }
+  bool  empty()             { return base_type::empty(); }
+};
+
+\end{minted}
+
+Contudo, nessa implementação, a operação dequeue passa a ter complexidade linear. Lembrando que no vector a operação remove o primeiro elemento do vetor possui complexidade linear. Na seção \ref{sec::circular_ queue}, apresentamos uma implementação de uma fila circular utilizando um vetor de tamanho fixo em que a operação dequeue é realizada em tempo constante.
+
+
+
+
+
+
+
+
+
+\section{Fila com lista encadeada simples com dois descritores}
+\label{sec::queue_single_linked_list}
+
+Nessa implementação, iremos implementar a fila utilizando dois ponteiros para o primeiro elemento e para o último. Na classe Node, teremos apenas um ponteiro para o próximo. Lembrando que na fila não temos uma travessia bidirecional.
+
+\begin{minted}{C++}
+template <typename T> 
+class queue{
+    private:
+        class Node;
+        Node * first;
+        Node * last;
+        int cnt;
+    public:
+        queue();
+        ~queue();
+        bool empty();
+        void enqueue(T key);
+        void dequeue();
+        T front();
+        int size();
+};
+
+template <typename T> 
+class queue<T>::Node{
+    public:
+    T key;
+    Node * next; 
+    Node(T key, Node * next = nullptr) : key(key), next(next) {};
+};
+\end{minted}
+
+
+As operações da lista podem ser implementadas facilmente:
+
+\begin{minted}{C++}
+template <typename T> 
+queue<T>::queue()
+{
+    first = last = nullptr;
+    cnt  = 0;
+}
+template <typename T> 
+queue<T>::~queue(){
+    auto ptr = first;
+    while(ptr){
+        auto temp = ptr;
+        ptr = ptr->next;
+        delete temp;
+    }
+    first = last = nullptr;
+    cnt = 0;
+}
+
+template <typename T> 
+bool queue<T>::empty()
+{
+    return cnt == 0;
+}
+
+template <typename T> 
+int queue<T>::size()
+{
+    return cnt;
+}
+
+template <typename T> 
+void queue<T>::enqueue(T key){
+    auto ptr = new Node(key);
+    if(last != nullptr)
+        last->next = ptr;
+    else
+        first = ptr;
+    last = ptr;
+    cnt++;
+}
+
+template <typename T> 
+void queue<T>::dequeue()
+{
+    if( first != nullptr)
+    {
+        auto temp = first;
+        first = first->next;
+
+        if(first == nullptr)
+            last = nullptr;
+        
+        delete temp;
+
+        cnt--;
+    }
+}
+
+template <typename T> 
+T queue<T>::front()
+{
+    if (first)
+        return first->key;
+    else
+        return T();
+}
+
+\end{minted}
+
+
+\section{Fila Circular}
+\label{sec::circular_ queue}
+
+\begin{minted}{C++}
+template <typename T> 
+class circular_queue{
+    private:
+        T * data;
+        int length;
+        int capacity;
+        int first;     
+    public:
+        circular_queue(int total);
+        ~circular_queue();
+        bool empty();
+        void enqueue(T key);
+        T dequeue();
+        T front();
+        bool full();
+        int size();
+};
+\end{minted}
+
+Construtor da classe
+\begin{minted}{C++}
+template <typename T> 
+circular_queue<T>::circular_queue(int total)
+{
+    data = new T[total];
+    capacity = total;
+    first = 0;
+    length = 0;
+}
+\end{minted}
+
+Método empty e full
+\begin{minted}{C++}
+template <typename T> 
+bool circular_queue<T>::empty()
+{
+    return length == 0;
+}
+
+template <typename T> 
+bool circular_queue<T>::full()
+{
+    return length == capacity;
+}
+
+\end{minted}
+
+Método enqueue
+\begin{minted}{C++}
+template <typename T> 
+void circular_queue<T>::enqueue(T key)
+{
+    if( length == capacity )
+    {
+        cerr << "fila cheia";
+        return ;
+    }
+    else
+    {
+        int fim = (first + length ) % capacity;
+        data[fim] = key;
+        length++;
+    }
+}
+\end{minted}
+
+
+Método dequeue
+\begin{minted}{C++}
+template <typename T> 
+T circular_queue<T>::dequeue()
+{
+    if( empty() )
+    {
+        cerr << "fila vazia";
+        return T();
+    }
+    else
+    {
+        T val = data[first];
+        first = (first + 1)%capacity;
+        length--;
+        return val;
+    }
+}
+
+\end{minted}
+
+\section{Revisitando o Josephus Problem}
+
+
+\begin{minted}{C++}
+int josephus_queue(int n, int k){
+
+  queue <int> q;
+
+  for(int i = 0; i < n; i++) q.push(i);
+
+  while( q.size() > 1){
+    //skip k-1
+    for(int i = 0; i < k-1; i++){
+      auto x = q.front();
+      q.push(x);
+      q.pop();
+    }
+
+    //cout << "kill " << q.front() << endl;
+    q.pop();
+  }  
+
+  return q.front();
+
+}
+\end{minted}
+
+
+\begin{minted}{C++}
+int josephus_circular_queue(int n, int k)
+{
+  circular_queue <int> q(n);
+
+  for(int i = 0; i < n; i++) q.enqueue(i);
+
+  while( q.size() > 1){
+    //skip k-1
+    for(int i = 0; i < k-1; i++){
+      auto x = q.front();
+      q.dequeue();
+      q.enqueue(x);
+    }
+
+    //cout << "kill " << q.front() << endl;
+    q.dequeue();
+  }  
+
+  return q.front();
+
+}
+
+\end{minted}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+$(n,k)$ & circular\_queue & queue \\
+\hline
+$(10^6, 6)$ & 0.104795 & 0.165802\\
+$(10^7, 6)$ & 0.715600 & 1.658800\\
+$(10^7, 6)$ & 0.715600 & 1.658800\\
+$(10^8, 6)$ & 6.759660 & 16.751390\\
+  
+\end{tabular}
+\end{center}
+
+
+

@@ -1,0 +1,378 @@
+\chapter{Listas duplamente encadeadas}
+
+No capítulo anterior, vimos que a lista encadeada simples é uma estrutura recursiva que contém pelo menos dois campos: um valor (val) e um ponteiro para o próximo nó. As listas encadeadas simples permitem a construção de lista com tamanho dinâmico sem acesso randômico. Essa estrutura permite um gerenciamento de memória mais flexível. Além disso, elas permitem que as operações de inserção e deleção possam ser feita em tempo constante. 
+
+
+\begin{center}
+\begin{tabular}{|l|ll|}
+\hline
+\multicolumn{1}{|c|}{\multirow{2}{*}{Estrutura de Dados}} & \multicolumn{2}{l|}{Inserção e deleção} \\ \cline{2-3} 
+\multicolumn{1}{|c|}{}                                    & \multicolumn{1}{l|}{Início}    & Fim    \\ \hline
+Lista Sequencial Dinâmica                                 & \multicolumn{1}{l|}{O(n)}      & O(1)   \\ \hline
+Lista encadeada simples com nó cabeça                     & \multicolumn{1}{l|}{O(1)}      & O(n)   \\ \hline
+Lista encadeada simples com nó cabeça e nó rabo           & \multicolumn{1}{l|}{O(1)}      & O(1)   \\ \hline
+\end{tabular}
+\end{center}
+
+A principal desvantagem das listas encadeadas é permitir apenas a travessia em apenas uma direção. Além disso, só podemos inserir um novo elemento após um dado nó. Essa restrição pode tornar alguns problemas mais complicados.
+
+
+
+Considere a seguinte definição do nó de uma lista encadeada simples:
+\begin{listing}[!ht]
+\caption{Definição do nó de uma lista encadeada simples}
+
+\begin{minted}{C++}
+template <typename T>
+class Node {
+    public:
+    T val;
+    Node *next;
+    Node() : val( T() ), next(nullptr) {}
+    Node(T x) : val(x), next(nullptr) {}
+    Node(T x, Node *next) : val(x), next(next) {} 
+};
+
+\end{minted}
+\end{listing}
+
+
+Considere que você recebe o ponteiro para nó cabeça de uma lista encadeada simples e um nó da lista a ser removido. Para remover esse nó da lista precisamos encontrar o nó anterior a ele para que esse nó aponte para o próximo do nó removido.
+
+\newpage 
+\begin{listing}[!ht]
+\caption{Deleção de um nó em uma lista encadeada simples}
+
+\begin{minted}{C++}
+
+template <typename T>
+Node<T> * deleteNode(Node<T> * head, Node<T> * node){
+    if(head == nullptr )
+        return head;
+    else if(head == node){
+        auto ptr = head->next;
+        delete head;
+        return ptr;
+    }else{
+        auto prev = head;
+        while( prev->next != node){
+            prev = prev->next;
+        }
+        prev->next = node->next;
+        delete node;
+        return head;
+    }
+}
+\end{minted}
+\end{listing}
+
+Considere agora a  seguinte definição de uma lista encadeada duplamente encadeada:
+
+
+\begin{listing}[!ht]
+\caption{Definição do nó de uma lista duplamente encadeada}
+\begin{minted}{C++}
+template <typename T>
+class Node {
+    public:
+    T val;
+    Node *next;
+    Node *prev;
+    Node() : val( T()  ), next(nullptr), prev(nullptr) {}
+    Node(T x) : val(x), next(nullptr), prev(nullptr) {}
+    Node(T x, Node *prev, Node *next) : val(x), prev(prev), next(next) {} 
+};
+
+\end{minted}
+\end{listing}
+
+O mesmo problema pode ser resolvido facilmente na lista duplamente encadeada. Como pode ser visto na Listagem \ref{listing::DeleteNodeDouble}.
+
+\begin{listing}[!ht]
+\caption{Deleção de um nó uma lista duplamente encadeada}
+\label{listing::DeleteNodeDouble}
+\begin{minted}{C++}
+template <typename T>
+Node<T> * deleteNode(Node<T> * head, Node<T> * node)
+{
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+    delete node;
+
+    return head;
+}
+\end{minted}
+\end{listing}
+
+
+
+\section{Recursão em listas duplamente encadeada}
+
+\subsection{Busca de um elemento}
+Dado o nó cabeça de uma lista duplamente encadeada. Sua tarefa é
+verificar se um elemento x está presente na lista duplamente encadeada.
+
+Matematicamente, podemos expressar esse problema recursivamente da seguinte maneira:
+
+
+\begin{equation}
+search(head, x) = 
+\begin{cases}
+false           & , head == nullptr\\
+true            & , head->val == x\\
+search(head->next, x) & , \text{caso contrário}\\
+
+\end{cases}
+\end{equation}
+
+\textbf{Caso Base}
+
+Neste problema, temos dois casos bases:
+
+\begin{enumerate}
+    \item Quando a lista duplamente encadeada está vazia (head == nullptr). Neste caso, devolvemos o valor booleano falso.
+    \item Quando o valor armazenado na cabeça da lista é igual ao valor x buscado (head->val == x). Neste caso, devolvemos o valor booleano true. 
+\end{enumerate}
+
+
+\textbf{Caso Recursivo}
+
+Neste caso, podemos reduzir o problema para um caso menor, ou seja, buscar o elemento x na lista duplamente encadeada cuja cabeça é head->next.
+
+
+\begin{listing}[!ht]
+\caption{Busca de um elemento em uma lista duplamente encadeada}
+\label{listing::DeleteNodeDouble}
+\begin{minted}{C++}
+template <typename T>
+bool * searchNode(Node<T> * head, T x)
+{
+    if(head == nullptr)
+        return false;
+    else if(head->val == x)
+        return true;
+    else   
+        return searchNode(head->next, x);
+}
+\end{minted}
+\end{listing}
+
+
+\subsection{Remover um elemento de uma lista encadeada}
+
+Dado o nó cabeça de uma lista duplamente encadeada. Sua tarefa é
+remover o nó com o valor x da lista duplamente encadeada.
+
+Matematicamente, podemos expressar esse problema recursivamente da seguinte maneira:
+
+
+\begin{equation}
+remove\_element(head, x) = 
+\begin{cases}
+head            & , head == nullptr\\
+head->next      & , head->val == x\\
+ptr = remove\_element(head->next, x) & , \text{caso contrário}\\
+head->next = ptr & , \text{caso contrário}\\
+ptr->prev = head & , \text{caso contrário}\\
+\end{cases}
+\end{equation}
+
+\textbf{Caso Base}
+
+Neste problema, temos dois casos bases:
+
+\begin{enumerate}
+    \item Quando a lista duplamente encadeada está vazia (head == nullptr). Neste caso, devolvemos nullptr.
+    \item Quando o valor armazenado na cabeça da lista é igual ao valor a ser removido. Neste caso, devolvemos head->next.  
+\end{enumerate}
+
+\textbf{Caso Recursivo}
+
+Quando o valor armazenado na cabeça da lista é diferente ao valor a ser removido, reduziremos o problema a remove o elemento x da lista duplamente encadeada com a cabeça em head->next com resultado ptr. Em seguida, reconstruiremos a lista duplamente encadeada inicial com as seguintes operações:
+
+\begin{enumerate}
+    \item head->next = ptr
+    \item ptr->prev  = head, se ptr != nullptr
+\end{enumerate}
+
+\begin{listing}[!ht]
+\caption{Remover um elemento de uma lista duplamente encadeada}
+\begin{minted}{C++}
+template <typename T>
+Node<T> * remove_element(Node<T> * head, T x){
+    if(head == nullptr)
+        return nullptr;
+    else
+    {
+        if(head->val == x)
+        {
+           auto ptr  = head->next;
+           delete head;
+           return ptr;
+        }
+        else
+        {
+            head->next = remove_element(head->next, x);
+            if( head->next )
+                head->next->prev = head;
+            return head;
+        }
+    }
+}
+\end{minted}
+\end{listing}
+
+\section{Lista Duplamente Encadeada com descritores}
+
+Um descritor de uma estrutura de dados é uma informação que ajuda a descrever a nossa estrutura e permite que algumas operações possam ser realizada de maneira mais eficiente.
+
+A implementação da lista duplamente encadeada apresentada aqui possui os seguintes descritores:
+\begin{itemize}
+    \item Um nó sentinela chamado head que aponta para o primeiro elemento da nossa lista encadeada.
+    \item Um nó sentinela chamado past\_last que é o próximo do último elemento da lista encadeada.
+    \item a variável inteira count representando o tamanho da lista encadeada.
+\end{itemize}
+
+Observe que com esses descritores podemos facilmente adicionar um elemento no ínicio e fim da lista encadeada e saber o tamanho da lista encadeada.
+
+Além disso, temos duas classes aninhadas:
+
+\begin{itemize}
+    \item A classe Node que descreve o nó de uma lista encadeada.
+    \item A classe Iterator utilizada para navegar pela lista encadeada sem expor sua representação interna.
+\end{itemize}
+
+
+
+\begin{listing}[!ht]
+\caption{Definição da Lista duplamente encadeada com descritores}
+\begin{minted}{C++}
+template <typename T> 
+class List;
+
+template <typename T> 
+class List{
+    private:
+        class Node;
+        Node * head;
+        Node * past_last;
+        int count;
+    public:        
+        class Iterator;
+        List();
+        int size();
+        void insert_front(T x);
+        void insert_back(T x);
+        void remove_front();
+        void remove_back();
+        T & front();
+        T & back();
+        auto begin();
+        auto end();
+        void insert_before(Iterator it, T x);
+        void erase_before(Iterator it);
+};
+\end{minted}
+\end{listing}
+
+
+\begin{listing}[!ht]
+\caption{Definição do nó de uma lista duplamente encadeada}
+\begin{minted}{C++}
+template <typename T> 
+class List<T>::Node{
+    public:
+    T val;
+    Node * next;
+    Node * prev;
+    Node() : next(nullptr), prev(nullptr){}
+    Node(T val) : next(nullptr), prev(nullptr){}
+    Node(T val, Node * prev, Node * next) : val(val), prev(prev), next(next) {}    
+};
+
+
+\end{minted}
+\end{listing}
+
+
+
+\begin{listing}[!ht]
+\caption{Definição do iterador da lista duplamente encadeada}
+\begin{minted}{C++}
+template <typename T> 
+class List<T>::Iterator{
+    private:
+        Node *atual;
+    public:
+        Iterator() : atual(nullptr){}
+        Iterator(Node * atual) : atual(atual){ }
+        Iterator next(){ return Iterator( atual->next); }
+        T & value() { return atual->val; }
+        bool operator!=(const Iterator & other) const{
+            return atual != other.atual;
+        }
+        void insert_before(T x)
+        {
+            auto ptr = new Node(x, atual->prev, atual);
+            atual->prev->next = ptr;
+            atual->prev = ptr;
+        }
+        void erase_before()
+        {
+            auto ptr = atual->prev;
+
+            ptr->prev->next = atual;
+            atual->prev = ptr->prev;
+
+            delete ptr;
+
+        }
+};
+\end{minted}
+\end{listing}
+
+
+
+\begin{listing}[!ht]
+\caption{Definição de algumas operações da lista encadeada}
+\begin{minted}{C++}
+template <typename T> 
+void List<T>::remove_front(){
+    if(count > 0){
+        auto ptr = head->next;
+        head->next = ptr->next;
+        ptr->next->prev = head;
+        delete ptr;
+        this->count--;
+    }
+}
+template <typename T> 
+void List<T>::remove_back(){
+    
+    if(count > 0){
+        auto last = past_last->prev;
+        past_last->prev = last->prev;
+        last->prev->next = past_last;
+        delete last;
+        this->count--;
+    }
+}
+template <typename T> 
+void List<T>::insert_front(T x){
+    auto ptr = new Node(x, head, head->next);
+    head->next->prev = ptr;
+    head->next = ptr;
+    this->count++;
+}
+template <typename T> 
+void List<T>::insert_back(T x){
+    auto ptr = new Node(x, past_last->prev, past_last);
+    past_last->prev->next = ptr;
+    past_last->prev = ptr;
+    this->count++;
+}
+
+\end{minted}
+\end{listing}
+
+

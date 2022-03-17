@@ -1,0 +1,347 @@
+% The end to end process: second chapter.
+
+\chapter{Listas sequencias com tamanho dinâmico}
+
+Listas sequencias são tipos de dados abstratos representando vetores que podem ter seu tamanho alterado. Como os vetores, as listas sequenciais utilizam regiões de memórias contíguas para seus elementos, o que significa que seus elementos também podem ser acessados por meio de deslocamento em ponteiros para seus elementos com a mesma eficiência dos vetores. Mas ao contrário dos vetores, o seu tamanho pode mudar dinamicamente. Internamente, a lista sequencial usa um vetor alocado dinamicamente para armazenar seus elementos. Esse vetor pode precisar ser realocado para aumentar de tamanho quando novos elementos forem inseridos, o que implica em alocar um novo vetor e mover todos os elementos para ele.
+
+Em geral, as listas sequenciais podem utilizar um espaço extra para acomodar um possível crescimento e assim a lista sequencial pode ter uma capacidade atual maior que a memória necessária para conter seus elementos.
+
+Portanto, comparado com os vetores, as listas sequenciais consomem mais memória contudo elas possuem a habilidade de crescimento dinâmico.
+
+\section{Programa Driver}
+
+\begin{minted}{C++}
+#include <stdio.h>
+#include <cstdlib>
+#include <iostream>
+
+#include "ListaSequencial.hpp"
+
+using namespace std;
+
+int main(){
+
+    ListaSequencial <int> v;
+
+    v.push(5);
+
+    cout << &v[0] << endl;
+    cout << "size: " << v.size() << endl;
+    cout << "capacity: " << v.getcapacity() << endl;
+    
+    v.push(7);
+    cout << &v[0] << endl;
+    cout << "size: " << v.size() << endl;
+    cout << "capacity: " << v.getcapacity() << endl;
+    
+    v.push(9);
+    cout << &v[0] << endl;
+    cout << "size: " << v.size() << endl;
+    cout << "capacity: " << v.getcapacity() << endl;
+    
+    v.push(10);
+    cout << &v[0] << endl;
+    cout << "size: " << v.size() << endl;
+    cout << "capacity: " << v.getcapacity() << endl;
+    
+    v.push(11);
+    cout << &v[0] << endl;
+    cout << "size: " << v.size() << endl;
+    cout << "capacity: " << v.getcapacity() << endl;
+    
+    
+   
+    cout << v << endl; // operator <<
+
+
+    cout << "using operator []" << endl;
+    int n = v.size();
+    for(int i = 0; i < n; i++){
+        cout << v[i] << endl; //operator []
+    }
+
+    cout << "using iterator, begin, end, prefix increment, *" << endl;
+    ListaSequencial<int>::Iterator it;
+    for(it = v.begin(); it != v.end(); ++it){
+        cout << *it << endl;
+    }
+
+    cout << "using iterator, begin, end, posfix increment, *" << endl;
+    for(it = v.begin(); it != v.end(); it++){
+        cout << *it << endl;
+    }
+
+
+
+
+}
+
+/*
+0x55a5a02b8eb0
+size: 1
+capacity: 1
+0x55a5a02b92e0
+size: 2
+capacity: 2
+0x55a5a02b8eb0
+size: 3
+capacity: 4
+0x55a5a02b8eb0
+size: 4
+capacity: 4
+0x55a5a02b9300
+size: 5
+capacity: 8
+[5 7 9 10 11]
+using operator []5
+7
+9
+10
+11
+using iterator, begin, end, prefix increment, *
+5
+7
+9
+10
+11
+using iterator, begin, end, posfix increment, *
+5
+7
+9
+10
+11
+
+
+
+*/
+\end{minted}
+
+
+\section{Cabeçalho}
+
+
+\begin{minted}{C++}
+#ifndef LISTASEQUENCIAL_HPP
+#define LISTASEQUENCIAL_HPP
+
+#include <stdexcept>
+
+template <typename T> class ListaSequencial;
+
+using namespace std;
+template <typename T> class ListaSequencial
+{
+ 
+    // arr is the integer pointer
+    // which stores the address of our vector
+    T* arr;
+ 
+    // capacity is the total storage
+    // capacity of the vector
+    int capacity;
+ 
+    // current is the number of elements
+    // currently present in the vector
+    int current;
+ 
+public:
+    
+    
+    class Iterator{
+
+        private:
+            const ListaSequencial <T> * pLista;
+            int m_index = -1;
+
+        public:
+            Iterator(){
+                pLista = nullptr;
+                int m_index = -1;
+            }      
+
+            Iterator(const ListaSequencial<T> * lista, int nIndex){
+                pLista = lista;
+                m_index = nIndex;
+            }
+
+            Iterator & operator++(){
+                ++m_index;
+                return *this;
+            }
+
+            Iterator operator++(int){ //posfix version
+                Iterator it(pLista, m_index);
+                ++(*this);
+                return it;
+            }
+
+            const T & operator*() const{
+                return pLista->operator[](m_index);
+
+            } 
+
+            bool operator!=(const Iterator & other) const{
+                return m_index != other.m_index;
+            }
+
+
+    };
+
+    
+    // Default constructor to initialise
+    // an initial capacity of 1 element and
+    // allocating storage using dynamic allocation
+    ListaSequencial()
+    {
+        arr = new T[1];
+        capacity = 1;
+        current = 0;
+    }
+
+    
+
+ 
+    // Function to add an element at the last
+    void push(T data)
+    {
+ 
+        // if the number of elements is equal to the
+        // capacity, that means we don't have space to
+        // accommodate more elements. We need to double the
+        // capacity
+        if (current == capacity) {
+            T* temp = new T[2 * capacity];
+ 
+            // copying old array elements to new array
+            for (int i = 0; i < capacity; i++) {
+                temp[i] = arr[i];
+            }
+ 
+            // deleting previous array
+            delete[] arr;
+            capacity *= 2;
+            arr = temp;
+        }
+ 
+        // Inserting data
+        arr[current] = data;
+        current++;
+    }
+ 
+    // function to add element at any index
+    void push(T data, int index)
+    {
+ 
+        // if index is equal to capacity then this
+        // function is same as push defined above
+        if (index == capacity)
+            push(data);
+        else
+            arr[index] = data;
+    }
+ 
+    const T & operator[](int index) const{
+        if (index >= capacity){
+            throw std::runtime_error("index out of range");
+        }
+        return arr[index];
+    }
+ 
+    // function to delete last element
+    void pop() { current--; }
+ 
+    // function to get size of the vector
+    int size() const { return current; }
+ 
+    // function to get capacity of the vector
+    int getcapacity() { return capacity; }
+ 
+    Iterator begin() const
+    {
+        return ListaSequencial<T>::Iterator(this, 0);
+    }
+
+    Iterator end() const 
+    {
+        return ListaSequencial<T>::Iterator(this, current);
+    }
+
+
+
+};
+
+template <typename T>
+ostream& operator<<(ostream &output, const ListaSequencial<T>& v)
+{
+    int n = v.size();
+    output << "[";
+    if( n > 0){
+        output << v[0];
+        for(int i = 1; i < n; i++)
+            output << " " << v[i];
+    }
+    output << "]";
+    return output;
+}
+
+#endif
+\end{minted}
+
+
+\section{Exercício}
+
+
+Dado uma ListaSequencial de inteiros nums e um inteiro val remova todas as ocorrências de val da ListaSequencial.
+
+Você deve colocar o resultado na primeira parte do array nums. Mais formalmente, se houver k elementos após a remoção dos elementos iguais a val, os primeiros k elementos de nums devem conter o resultado final. Não importa o que você deixe além dos primeiros k elementos.
+
+referência: \url{https://leetcode.com/problems/remove-element/}
+
+\begin{minted}{C++}
+#include <stdio.h>
+#include <cstdlib>
+#include <iostream>
+
+#include "ListaSequencial.hpp"
+
+using namespace std;
+
+int removeElement(ListaSequencial<int> v, int val){
+
+    int n = v.size();
+    int k = 0;
+    for(int i = 0; i < n; i++){
+        if(v[i] != val){
+            v[k++] = v[i];
+        }
+    }
+
+    return k;
+
+}
+
+int main(){
+
+    ListaSequencial <int> v;
+    v.push(4);
+    v.push(5);
+ 	v.push(6);
+    v.push(5);
+    v.push(3);
+
+    int k = removeElement(v, 5);
+
+    for(int i = 0; i < k ; i++){
+        cout << v[i] << endl;
+    }
+
+
+}
+
+\end{minted}
+
+
+\url{https://www.hackerearth.com/practice/data-structures/arrays/1-d/practice-problems/algorithm/minimum-additions-0142ac80/}
+
+
+
